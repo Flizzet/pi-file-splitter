@@ -8,7 +8,7 @@
 """
 
 import os
-import string
+from time import gmtime, strftime
 from os import listdir
 from os.path import isfile, join
 from enum import IntEnum
@@ -79,19 +79,25 @@ def main():
                 os.makedirs(path + "minis/")
             fout = open(path + "minis/mini_0.txt", "wb")
             for line in fileobj:
-                for char in unwanted_chars:
-                    line = line.replace(char, '')
-
                 for ch in line:
-                   total_chars = total_chars + 1
-                   current_char = current_char + 1
-                   fout.write(ch.encode())
-                   if total_chars % NUM_CHARS == 0:
-                       current_file = current_file + 1;
-                       fout = open(path + "minis/mini_%d.txt" %current_file, "wb")
-            fout.close()
+                    uncounted_char = False
+                    for char in unwanted_chars:
+                        if ch.encode() == char.encode():
+                            fout.write(ch.encode())
+                            current_char = current_char + 1
+                            uncounted_char = True;
+                    if not uncounted_char:
+                        fout.write(ch.encode())
+                        total_chars = total_chars + 1
+                        current_char = current_char + 1
+                    if not uncounted_char and total_chars % NUM_CHARS == 0:
+                        current_file = current_file + 1;
+                        fout = open(path + "minis/mini_%d.txt" % current_file, "wb")
 
-        print("Files split.")
+
+        fout.close()
+
+    print("Files split.")
 
 
     # Entering matching mode
@@ -117,17 +123,23 @@ def main():
         os.system('cls' if os.name == 'nt' else 'clear')
 
 
-        # Check if the text inputted by user corresponds to the text of any of the files
+        # Check if the text inputted by
+        # user corresponds to the text of any of the files
         def checkContent(user_text):
             file_found = False
             matching_file = None
             for file in all_files:
                 with open(folder + "/" + file, 'r') as content_file:
-                    if user_text == content_file.read():
+                    file_text = content_file.read()
+                    for char in unwanted_chars:
+                        file_text = file_text.replace(char, "");
+                    if user_text == file_text:
                         file_found = True
                         matching_file = content_file
             if file_found:
                 print("File found! It's " + matching_file.name)
+                f = open("log.txt", "a+")
+                f.write(matching_file.name + " | " + strftime("%Y-%m-%d %H:%M:%S", gmtime()) + "\n")
             else:
                 os.system('cls' if os.name == 'nt' else 'clear')
                 print("File not found!")
